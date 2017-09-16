@@ -52,7 +52,7 @@ public class mainJava {
 			try {
 				Files.move(x.toPath(), new File(result).toPath(), REPLACE_EXISTING);
 			} catch (IOException e) {
-				System.err.println("Errore nella copia");
+				System.err.println("Error during the renaming");
 				e.printStackTrace();
 			}
 		}		
