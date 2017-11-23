@@ -1,3 +1,4 @@
+
 /*
     This file is part of JRandomMP3
 
@@ -27,6 +28,8 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.management.relation.RelationServiceNotRegisteredException;
+
 public class mainJava {
 
 	public static void main(String[] args) {
@@ -36,7 +39,7 @@ public class mainJava {
 		File[] l = retrieveMp3(origin);
 		Map<File, Integer> map = new HashMap<File, Integer>();
 		Pattern pattern = Pattern.compile(".*\\d+-.*");
-		int digit = (int) (Math.floor(Math.log10(l.length)) + 1);
+		int digit = 4;// (int) (Math.floor(Math.log10(l.length)) + 1)+1;
 		String format = "%0" + digit + "d";
 		for (File x : l) {
 			int i = r.nextInt(l.length);
@@ -49,13 +52,15 @@ public class mainJava {
 			String result = "";
 			result = createNewFilename(origin, map, pattern, format, x, result);
 			System.out.println(x + "\t\t=> " + result);
+
 			try {
 				Files.move(x.toPath(), new File(result).toPath(), REPLACE_EXISTING);
 			} catch (IOException e) {
 				System.err.println("Error during the renaming");
 				e.printStackTrace();
 			}
-		}		
+
+		}
 		System.out.println("Done!");
 	}
 
@@ -64,14 +69,22 @@ public class mainJava {
 		Matcher matcher = pattern.matcher(x.toString());
 		if (matcher.matches()) {
 			String y = x.toString();
-			String[] part = y.split("(/|-)");
-			for (int i = 1; i < part.length; i++) {
-				if (i == 1) {
-					result += origin.getAbsolutePath() + "/" + String.format(format, map.get(x)) + "-";
-				} else {
-					result += part[i];
+			String filename = y.split("/")[1];
+			char[] arr = filename.toCharArray();
+			if (arr[4] == '-') {
+				// Already transformed
+				int i = 0;
+				while (arr[i] != '-') {
+					i++;
+				}
+				filename = "";
+				i++;
+				while (i < arr.length) {
+					filename += arr[i];
+					i++;
 				}
 			}
+			result += origin.getAbsolutePath() + "/" + String.format(format, map.get(x)) + "-" + filename;
 		} else {
 			result = origin.getAbsolutePath() + "/" + String.format(format, map.get(x)) + "-" + x.getName();
 		}
