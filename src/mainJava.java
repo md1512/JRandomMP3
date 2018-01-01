@@ -1,4 +1,3 @@
-
 /*
     This file is part of JRandomMP3
 
@@ -16,7 +15,6 @@
     along with JRandomMP3.  If not, see <http://www.gnu.org/licenses/>.
   
  */
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -28,9 +26,11 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.management.relation.RelationServiceNotRegisteredException;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class mainJava {
+
+	private static int digit = 4;
 
 	public static void main(String[] args) {
 		File origin = new File(".");
@@ -39,7 +39,6 @@ public class mainJava {
 		File[] l = retrieveMp3(origin);
 		Map<File, Integer> map = new HashMap<File, Integer>();
 		Pattern pattern = Pattern.compile(".*\\d+-.*");
-		int digit = 4;// (int) (Math.floor(Math.log10(l.length)) + 1)+1;
 		String format = "%0" + digit + "d";
 		for (File x : l) {
 			int i = r.nextInt(l.length);
@@ -49,12 +48,11 @@ public class mainJava {
 			map.put(x, i);
 		}
 		for (File x : map.keySet()) {
-			String result = "";
-			result = createNewFilename(origin, map, pattern, format, x, result);
+			File result = createNewFilename(origin, map, pattern, format, x);
 			System.out.println(x + "\t\t=> " + result);
 
 			try {
-				Files.move(x.toPath(), new File(result).toPath(), REPLACE_EXISTING);
+				Files.move(x.toPath(), result.toPath(), REPLACE_EXISTING);
 			} catch (IOException e) {
 				System.err.println("Error during the renaming");
 				e.printStackTrace();
@@ -64,40 +62,38 @@ public class mainJava {
 		System.out.println("Done!");
 	}
 
-	private static String createNewFilename(File origin, Map<File, Integer> map, Pattern pattern, String format, File x,
-			String result) {
-		Matcher matcher = pattern.matcher(x.toString());
+	private static File createNewFilename(File origin, Map<File, Integer> map, Pattern pattern, String format, File x) {
+		File result;
+		Matcher matcher = pattern.matcher(x.getName());
 		if (matcher.matches()) {
-			String y = x.toString();
-			String filename = y.split("/")[1];
-			char[] arr = filename.toCharArray();
-			if (arr[4] == '-') {
+			StringBuilder filename = new StringBuilder(x.getName());
+			char[] arr = filename.toString().toCharArray();
+			if (arr[digit] == '-') {
 				// Already transformed
 				int i = 0;
 				while (arr[i] != '-') {
 					i++;
 				}
-				filename = "";
+				filename = new StringBuilder();
 				i++;
 				while (i < arr.length) {
-					filename += arr[i];
+					filename.append(arr[i]);
 					i++;
 				}
 			}
-			result += origin.getAbsolutePath() + "/" + String.format(format, map.get(x)) + "-" + filename;
+			result = new File(origin, String.format(format, map.get(x)) + "-" + filename);
 		} else {
-			result = origin.getAbsolutePath() + "/" + String.format(format, map.get(x)) + "-" + x.getName();
+			result = new File(origin, String.format(format, map.get(x)) + "-" + x.getName());
 		}
 		return result;
 	}
 
 	private static File[] retrieveMp3(File f) {
-		File[] l = f.listFiles(new FilenameFilter() {
+		return f.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.toLowerCase().endsWith(".mp3");
 			}
 		});
-		return l;
 	}
 
 }
